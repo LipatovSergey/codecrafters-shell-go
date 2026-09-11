@@ -37,14 +37,11 @@ func main() {
 			for _, dir := range dirs {
 				fullpath := filepath.Join(dir, command)
 				info, err := os.Stat(fullpath)
-				if err != nil {
-					continue
+				if err == nil && info.Mode().Perm()&0o111 != 0 {
+					fmt.Println(command, "is", fullpath)
+					break
 				}
-				if info.Mode().Perm()&0o111 == 0 {
-					continue
-				}
-				fmt.Println(command, "is", fullpath)
-				break
+				continue
 			}
 			fmt.Println(command + ": not found")
 			continue
