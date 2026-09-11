@@ -13,6 +13,9 @@ func main() {
 		fmt.Print("$ ")
 		command, _ := reader.ReadString('\n')
 		command = strings.TrimSpace(command)
+		if command == "exit" {
+			break
+		}
 		fmt.Print(command, ": command not found\n")
 	}
 }
