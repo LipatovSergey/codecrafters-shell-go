@@ -34,6 +34,7 @@ func main() {
 				fmt.Println(command + " is a shell builtin")
 				continue
 			}
+			found := false
 			for _, dir := range dirs {
 				fullpath := filepath.Join(dir, command)
 				info, err := os.Stat(fullpath)
@@ -43,7 +44,9 @@ func main() {
 				}
 				continue
 			}
-			fmt.Println(command + ": not found")
+			if !found {
+				fmt.Println(command + ": not found")
+			}
 			continue
 		}
 		fmt.Println(input + ": command not found")
