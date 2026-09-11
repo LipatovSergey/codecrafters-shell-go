@@ -17,7 +17,7 @@ func main() {
 			break
 		}
 		if strings.HasPrefix(command, "echo ") {
-			fmt.Println(command[5:] + "\n")
+			fmt.Println(command[5:])
 			continue
 		}
 		fmt.Print(command, ": command not found\n")
