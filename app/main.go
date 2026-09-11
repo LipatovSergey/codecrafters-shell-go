@@ -39,6 +39,7 @@ func main() {
 				fullpath := filepath.Join(dir, command)
 				info, err := os.Stat(fullpath)
 				if err == nil && info.Mode().Perm()&0o111 != 0 {
+					found = true
 					fmt.Println(command, "is", fullpath)
 					break
 				}
