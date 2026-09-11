@@ -9,17 +9,31 @@ import (
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
+	builtInCommands := map[string]struct{}{
+		"echo": {},
+		"exit": {},
+		"type": {},
+	}
 	for {
 		fmt.Print("$ ")
-		command, _ := reader.ReadString('\n')
-		command = strings.TrimSpace(command)
-		if command == "exit" {
+		input, _ := reader.ReadString('\n')
+		input = input[:len(input)-1]
+		if input == "exit" {
 			break
 		}
-		if strings.HasPrefix(command, "echo ") {
-			fmt.Println(command[5:])
+		if strings.HasPrefix(input, "echo ") {
+			fmt.Println(input[5:])
 			continue
 		}
-		fmt.Print(command, ": command not found\n")
+		if strings.HasPrefix(input, "type ") {
+			command := input[5:]
+			if _, ok := builtInCommands[command]; ok {
+				fmt.Println(command + " is a shell builtin")
+			} else {
+				fmt.Println(command + ": not found")
+			}
+			continue
+		}
+		fmt.Println(input + ": command not found")
 	}
 }
