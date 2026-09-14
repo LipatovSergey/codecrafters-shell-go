@@ -28,6 +28,7 @@ func main() {
 		"echo": {},
 		"exit": {},
 		"type": {},
+		"pwd":  {},
 	}
 	for {
 		fmt.Print("$ ")
