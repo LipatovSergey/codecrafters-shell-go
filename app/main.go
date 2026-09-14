@@ -138,13 +138,13 @@ func findExecutable(command string) (string, bool) {
 }
 
 func (s *Shell) runExternal(command string, args []string) {
-	fullPath, found := findExecutable(command)
+	_, found := findExecutable(command)
 	if !found {
 		fmt.Println(command + ": command not found")
 		return
 	}
 
-	cmd := exec.Command(fullPath, args...)
+	cmd := exec.Command(command, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
