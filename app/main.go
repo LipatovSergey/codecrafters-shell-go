@@ -38,7 +38,9 @@ func main() {
 			break
 		}
 		if input == "pwd" {
-			fmt.Println(os.Getwd())
+			path, _ := os.Getwd()
+			fmt.Println(path)
+			continue
 		}
 		if strings.HasPrefix(input, "echo ") {
 			fmt.Println(input[5:])
