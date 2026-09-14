@@ -36,6 +36,9 @@ func main() {
 		if input == "exit" {
 			break
 		}
+		if input == "pwd" {
+			fmt.Println(os.Getwd())
+		}
 		if strings.HasPrefix(input, "echo ") {
 			fmt.Println(input[5:])
 			continue
