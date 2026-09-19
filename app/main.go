@@ -79,7 +79,14 @@ func (s *Shell) echoCommand(args []string) {
 }
 
 func (s *Shell) cdCommand(args []string) {
-	err := os.Chdir(args[0])
+	path := args[0]
+	if path == "~" {
+		home := os.Getenv("HOME")
+		os.Chdir(home)
+		return
+	}
+
+	err := os.Chdir(path)
 	if err != nil {
 		fmt.Println("cd:", args[0]+": No such file or directory")
 		return
