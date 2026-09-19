@@ -25,6 +25,7 @@ func NewShell() *Shell {
 		"echo": shell.echoCommand,
 		"pwd":  shell.pwdCommand,
 		"type": shell.typeCommand,
+		"cd":   shell.cdCommand,
 	}
 
 	return shell
@@ -75,6 +76,14 @@ func parseInput(input string) (string, []string) {
 
 func (s *Shell) echoCommand(args []string) {
 	fmt.Println(strings.Join(args, " "))
+}
+
+func (s *Shell) cdCommand(args []string) {
+	err := os.Chdir(args[0])
+	if err != nil {
+		fmt.Println("cd:", args[0]+": No such file or directory")
+		return
+	}
 }
 
 func (s *Shell) pwdCommand(_ []string) {
