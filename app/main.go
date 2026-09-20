@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"unicode"
 )
 
 type builtinFunc func([]string)
@@ -40,8 +41,6 @@ func (s *Shell) Run() {
 			return
 		}
 
-		input = strings.TrimSuffix(input, "\n")
-
 		command, args := parseInput(input)
 
 		if command == "" {
@@ -62,16 +61,36 @@ func (s *Shell) Run() {
 }
 
 func parseInput(input string) (string, []string) {
-	fields := strings.Fields(input)
+	result := []string{}
+	currentArg := ""
+	argStarted := false
+	inSingleQuotes := false
+	for _, rune := range input {
+		if rune == '\'' {
+			if !inSingleQuotes {
+				inSingleQuotes = true
+			} else {
+				inSingleQuotes = false
+			}
+			continue
+		}
 
-	if len(fields) == 0 {
-		return "", nil
+		if !inSingleQuotes && unicode.IsSpace(rune) || rune == '\n' {
+			if argStarted {
+				result = append(result, string(currentArg))
+				currentArg = ""
+				argStarted = false
+			}
+			continue
+		}
+
+		if !argStarted {
+			argStarted = true
+		}
+		currentArg += string(rune)
+
 	}
-
-	command := fields[0]
-	args := fields[1:]
-
-	return command, args
+	return result[0], result[1:]
 }
 
 func (s *Shell) echoCommand(args []string) {
