@@ -68,7 +68,7 @@ func parseInput(input string) (string, []string) {
 	inDoubleQuotes := false
 	for _, r := range input {
 		switch {
-		case r == '\'':
+		case r == '\'' && !inDoubleQuotes:
 			inSingleQuotes = !inSingleQuotes
 
 		case r == '"':
