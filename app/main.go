@@ -65,30 +65,26 @@ func parseInput(input string) (string, []string) {
 	currentArg := ""
 	argStarted := false
 	inSingleQuotes := false
-	for _, rune := range input {
-		if rune == '\'' {
-			if !inSingleQuotes {
-				inSingleQuotes = true
-			} else {
-				inSingleQuotes = false
-			}
-			continue
-		}
+	inDoubleQuotes := false
+	for _, r := range input {
+		switch {
+		case r == '\'':
+			inSingleQuotes = !inSingleQuotes
 
-		if !inSingleQuotes && unicode.IsSpace(rune) || rune == '\n' {
+		case r == '"':
+			inDoubleQuotes = !inDoubleQuotes
+
+		case !inSingleQuotes && !inDoubleQuotes && unicode.IsSpace(r):
 			if argStarted {
-				result = append(result, string(currentArg))
+				result = append(result, currentArg)
 				currentArg = ""
 				argStarted = false
 			}
-			continue
-		}
 
-		if !argStarted {
+		default:
 			argStarted = true
+			currentArg += string(r)
 		}
-		currentArg += string(rune)
-
 	}
 	return result[0], result[1:]
 }
