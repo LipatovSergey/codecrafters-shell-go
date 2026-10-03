@@ -82,7 +82,7 @@ func parseInput(input string) (string, []string) {
 				argStarted = false
 			}
 
-		case !inDoubleQuotes && !inSingleQuotes && r == '\\':
+		case !inDoubleQuotes && !inSingleQuotes && !nextToBackSlash && r == '\\':
 			nextToBackSlash = true
 
 		case nextToBackSlash:
