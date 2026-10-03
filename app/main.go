@@ -66,20 +66,28 @@ func parseInput(input string) (string, []string) {
 	argStarted := false
 	inSingleQuotes := false
 	inDoubleQuotes := false
+	nextToBackSlash := false
 	for _, r := range input {
 		switch {
-		case r == '\'' && !inDoubleQuotes:
+		case r == '\'' && !inDoubleQuotes && !nextToBackSlash:
 			inSingleQuotes = !inSingleQuotes
 
-		case r == '"':
+		case r == '"' && !inSingleQuotes && !nextToBackSlash:
 			inDoubleQuotes = !inDoubleQuotes
 
-		case !inSingleQuotes && !inDoubleQuotes && unicode.IsSpace(r):
+		case !inSingleQuotes && !inDoubleQuotes && !nextToBackSlash && unicode.IsSpace(r):
 			if argStarted {
 				result = append(result, currentArg)
 				currentArg = ""
 				argStarted = false
 			}
+
+		case !inDoubleQuotes && !inSingleQuotes && r == '\\':
+			nextToBackSlash = true
+
+		case nextToBackSlash:
+			currentArg += string(r)
+			nextToBackSlash = false
 
 		default:
 			argStarted = true
