@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -10,7 +11,7 @@ import (
 	"unicode"
 )
 
-type builtinFunc func([]string)
+type builtinFunc func([]string, io.Writer)
 
 type Shell struct {
 	reader   *bufio.Reader
@@ -41,7 +42,7 @@ func (s *Shell) Run() {
 			return
 		}
 
-		command, args := parseInput(input)
+		command, args, outputFile := parseInput(input)
 
 		if command == "" {
 			continue
@@ -52,7 +53,16 @@ func (s *Shell) Run() {
 		}
 
 		if handler, ok := s.builtins[command]; ok {
-			handler(args)
+			if outputFile != "" {
+				file, err := os.Create(outputFile)
+				if err != nil {
+					fmt.Fprintln(os.Stderr, err)
+				}
+				handler(args, file)
+				file.Close()
+			} else {
+				handler(args, os.Stdout)
+			}
 			continue
 		}
 
@@ -60,14 +70,16 @@ func (s *Shell) Run() {
 	}
 }
 
-func parseInput(input string) (string, []string) {
+func parseInput(input string) (string, []string, string) {
 	result := []string{}
 	currentArg := ""
 	argStarted := false
 	inSingleQuotes := false
 	inDoubleQuotes := false
 	nextToBackSlash := false
-	for _, r := range input {
+	outupRedirection := false
+	outputFile := ""
+	for i, r := range input {
 		switch {
 		case r == '\'' && !inDoubleQuotes && !nextToBackSlash:
 			inSingleQuotes = !inSingleQuotes
@@ -75,14 +87,23 @@ func parseInput(input string) (string, []string) {
 		case r == '"' && !inSingleQuotes && !nextToBackSlash:
 			inDoubleQuotes = !inDoubleQuotes
 
+		case r == '>' || (r == '1' && input[i+1] == '>') && !inSingleQuotes && !inDoubleQuotes && !nextToBackSlash:
+			outupRedirection = true
+
 		case !inSingleQuotes && !inDoubleQuotes && !nextToBackSlash && unicode.IsSpace(r):
 			if argStarted {
-				result = append(result, currentArg)
+				if outupRedirection {
+					outputFile = currentArg
+					fmt.Println("output file:", outputFile)
+					outupRedirection = false
+				} else {
+					result = append(result, currentArg)
+				}
 				currentArg = ""
 				argStarted = false
 			}
 
-		case !inSingleQuotes && !nextToBackSlash && r == '\\':
+		case r == '\\' && !inSingleQuotes && !nextToBackSlash:
 			nextToBackSlash = true
 
 		case nextToBackSlash:
@@ -94,14 +115,14 @@ func parseInput(input string) (string, []string) {
 			currentArg += string(r)
 		}
 	}
-	return result[0], result[1:]
+	return result[0], result[1:], outputFile
 }
 
-func (s *Shell) echoCommand(args []string) {
-	fmt.Println(strings.Join(args, " "))
+func (s *Shell) echoCommand(args []string, output io.Writer) {
+	fmt.Fprintln(output, strings.Join(args, " "))
 }
 
-func (s *Shell) cdCommand(args []string) {
+func (s *Shell) cdCommand(args []string, _ io.Writer) {
 	path := args[0]
 	if path == "~" {
 		home := os.Getenv("HOME")
@@ -111,22 +132,22 @@ func (s *Shell) cdCommand(args []string) {
 
 	err := os.Chdir(path)
 	if err != nil {
-		fmt.Println("cd:", args[0]+": No such file or directory")
+		fmt.Fprintln(os.Stderr, "cd:", args[0]+": No such file or directory")
 		return
 	}
 }
 
-func (s *Shell) pwdCommand(_ []string) {
+func (s *Shell) pwdCommand(_ []string, output io.Writer) {
 	path, err := os.Getwd()
 	if err != nil {
-		fmt.Println("pwd: failed to get current directory")
+		fmt.Fprintln(os.Stderr, "pwd: failed to get current directory")
 		return
 	}
 
-	fmt.Println(path)
+	fmt.Fprintln(output, path)
 }
 
-func (s *Shell) typeCommand(args []string) {
+func (s *Shell) typeCommand(args []string, output io.Writer) {
 	if len(args) == 0 {
 		return
 	}
@@ -134,22 +155,22 @@ func (s *Shell) typeCommand(args []string) {
 	command := args[0]
 
 	if command == "exit" {
-		fmt.Println(command + " is a shell builtin")
+		fmt.Fprintln(output, command+" is a shell builtin")
 		return
 	}
 
 	if _, ok := s.builtins[command]; ok {
-		fmt.Println(command + " is a shell builtin")
+		fmt.Fprintln(output, command+" is a shell builtin")
 		return
 	}
 
 	fullPath, found := findExecutable(command)
 	if found {
-		fmt.Println(command, "is", fullPath)
+		fmt.Fprintln(output, command, "is", fullPath)
 		return
 	}
 
-	fmt.Println(command + ": not found")
+	fmt.Fprintln(os.Stderr, command+": not found")
 }
 
 func findExecutable(command string) (string, bool) {
