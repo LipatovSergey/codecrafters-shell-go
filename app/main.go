@@ -94,7 +94,6 @@ func parseInput(input string) (string, []string, string) {
 			if argStarted {
 				if outupRedirection {
 					outputFile = currentArg
-					fmt.Println("output file:", outputFile)
 					outupRedirection = false
 				} else {
 					result = append(result, currentArg)
